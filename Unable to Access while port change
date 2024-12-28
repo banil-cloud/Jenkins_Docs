@@ -1,0 +1,138 @@
+Detailed Steps to Install and Configure Jenkins on Ubuntu with Port Change
+
+This document provides step-by-step instructions to install Jenkins on Ubuntu, change its default port from 8080 to 9090, and resolve issues during configuration.
+
+1. Update and Upgrade the Server
+
+Update the package lists and upgrade the installed packages:
+
+sudo apt update
+sudo apt upgrade -y
+
+2. Install Java 17
+
+Jenkins requires Java to run. Install Java 17 and verify the installation:
+
+sudo apt install openjdk-17-jdk -y
+java -version
+
+Ensure the output confirms Java 17 is installed.
+
+3. Add Jenkins Repository and Install Jenkins
+
+Follow the official Jenkins documentation to install Jenkins:
+
+Add the Jenkins key and repository:
+
+curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo tee \
+    /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+    https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+    /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+Update the package list and install Jenkins:
+
+sudo apt update
+sudo apt install jenkins -y
+
+4. Change Jenkins Port to 9090
+
+By default, Jenkins listens on port 8080. Modify it to use port 9090:
+
+Open the Jenkins configuration file:
+
+sudo nano /etc/default/jenkins
+
+Locate and update the following lines:
+
+HTTP_PORT=9090
+JENKINS_ARGS="--webroot=/var/cache/$NAME/war --httpPort=$HTTP_PORT"
+
+Save and exit the file.
+
+5. Restart and Enable Jenkins
+
+Restart Jenkins to apply the configuration and enable it to start on boot:
+
+sudo systemctl restart jenkins
+sudo systemctl enable jenkins
+sudo systemctl status jenkins
+
+6. Verify Jenkins Access on Port 9090
+
+Open your browser and navigate to:
+
+http://<your-ubuntu-ip>:9090
+
+If the browser shows an error, proceed to the next steps to troubleshoot.
+
+7. Troubleshooting Steps
+
+Stop Jenkins and Kill Existing Processes
+
+Stop Jenkins:
+
+sudo systemctl stop jenkins
+
+Check for any remaining Jenkins processes:
+
+sudo ps aux | grep jenkins
+
+Kill any remaining Jenkins processes:
+
+sudo kill -9 <PID>
+
+Check and Update Systemd Service Configuration
+
+Open the systemd configuration file:
+
+sudo nano /lib/systemd/system/jenkins.service
+
+Ensure the following line contains the correct port:
+
+ExecStart=/usr/bin/java -Djava.awt.headless=true -jar /usr/share/java/jenkins.war --webroot=/var/cache/jenkins/war --httpPort=9090
+
+Update the environment variables:
+
+Environment="JENKINS_PORT=9090"
+
+Save and exit the file, then reload the systemd configuration:
+
+sudo systemctl daemon-reload
+
+Allow Port 9090 in the Firewall
+
+Ensure port 9090 is open and accessible:
+
+sudo ufw allow 9090
+sudo ufw reload
+
+Start Jenkins
+
+Restart Jenkins and check its status:
+
+sudo systemctl start jenkins
+sudo systemctl status jenkins
+
+Verify if Jenkins is listening on port 9090:
+
+sudo ss -tuln | grep 9090
+
+You should see output indicating that Jenkins is listening on port 9090.
+
+8. Access Jenkins in the Browser
+
+Open your browser and navigate to:
+
+http://<your-ubuntu-ip>:9090
+
+Replace <your-ubuntu-ip> with your server’s IP address. You should now be able to access Jenkins successfully.
+
+9. Unlock Jenkins and Start Configuration
+
+Once you access Jenkins, you will be prompted to enter an initial admin password. Find this password in:
+
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+Copy the password, paste it into the browser, and proceed with the setup.
+
